@@ -5,15 +5,46 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <typeinfo>
 
 #include "fast_map.h"
 
-const int c_numStrings{ 10000 };
+const int c_numStrings{ 1000000 };
 
 void unordered_map_test(const std::vector<std::string>& strings);
-void map_test(const std::vector<std::string>& strings);
+void orderedmap_test(const std::vector<std::string>& strings);
 void vector_test(const std::vector<std::string>& strings);
 void fasttable_test(const std::vector<std::string>& strings);
+
+void test_fasttable();
+
+template <typename Map>
+double test_map(Map& map, const std::vector<std::string>& strings, bool reserve)
+{
+    if (reserve)
+    {
+        map.reserve(strings.size());
+    }
+    
+    auto begin = std::chrono::system_clock::now();
+    for(const auto& str : strings)
+    {
+        map[str]++;
+    }
+
+    int total = 0;
+    for(int i = 0; i < 3; i++)
+    {
+        for(const auto& str : strings)
+        {
+            total += map[str];
+        }
+    }
+    auto end = std::chrono::system_clock::now();
+    std::chrono::duration<double> duration = end-begin;
+    std::cout << typeid(map).name() << " took " << duration.count() << " seconds. Reserved? " << (reserve ? "yes" : "no") << std::endl;
+    return duration.count();
+}
 
 int main()
 {
@@ -26,9 +57,9 @@ int main()
 
     for(int i = 0; i < c_numStrings; i++)
     {
-        const int c_numCharsPerStr{ 4 };
+        const int c_numCharsPerStr{ 10 };
 
-        std::string tmpStr(4, 0);
+        std::string tmpStr(c_numCharsPerStr, 0);
         for(int j = 0; j < c_numCharsPerStr; j++)
         {
             tmpStr[j] = (char)randChar();
@@ -36,57 +67,69 @@ int main()
         strings.emplace_back(std::move(tmpStr)); 
     }
 
-    std::cout << "Num of strings in vector: " << strings.size() << std::endl;
 
-    auto begin = std::chrono::system_clock::now();
-    unordered_map_test(strings);
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> duration = end-begin;
-    std::cout << "Unordered map test took: " << duration.count() << " seconds." << std::endl;
-    
-    begin = std::chrono::system_clock::now();
-    map_test(strings);
-    end = std::chrono::system_clock::now();
-    duration = end-begin;
-    std::cout << "Map test took: " << duration.count() << " seconds." << std::endl;
+    fast_map<std::string, int> fastMap, fastMap2;
+    std::unordered_map<std::string, int> uMap, uMap2;
+    test_map<fast_map<std::string, int>>(fastMap, strings, true);
+    test_map<fast_map<std::string, int>>(fastMap2, strings, false);
 
-    /*
-    begin = std::chrono::system_clock::now();
-    vector_test(strings);
-    end = std::chrono::system_clock::now();
-    duration = end-begin;
-    std::cout << "Vector test took: " << duration.count() << " seconds." << std::endl;
-    */
+    test_map<std::unordered_map<std::string, int>>(uMap, strings, true);
+    test_map<std::unordered_map<std::string, int>>(uMap2, strings, false);
+}
 
-    begin = std::chrono::system_clock::now();
-    fasttable_test(strings);
-    end = std::chrono::system_clock::now();
-    duration = end-begin;
-    std::cout << "Fast map test took: " << duration.count() << " seconds." << std::endl;
-   
+void test_fasttable()
+{
+    fast_map<std::string, int> map;
+    map["hello"] = 1;
+    map["hello"]++;
+    std::cout << map["hello"] << std::endl;
 }
 
 void unordered_map_test(const std::vector<std::string>& strings)
 {
     std::unordered_map<std::string, int> strMap;
-    strMap.reserve(c_numStrings);
+    //strMap.reserve(c_numStrings);
     for(const auto& str : strings)
     {
         strMap[str]++;
     }
+
+    int total = 0;
+    for(int i = 0; i < 10; i++)
+    {
+        for(const auto& str : strings)
+        {
+            total += strMap[str];
+        }
+    }
+
+    //std::cout << "total: " << total << std::endl;
 }
 
 void fasttable_test(const std::vector<std::string>& strings)
 {
     fast_map<std::string, int> strMap;
-    strMap.reserve(c_numStrings);
+    //strMap.reserve(c_numStrings);
     for(const auto& str : strings)
     {
         strMap[str]++;
     }
+
+    
+    int total = 0;
+    for(int i = 0; i < 10; i++)
+    {
+        for(const auto& str : strings)
+        {
+            total += strMap[str];
+        }
+    }
+
+    //std::cout << "total: " << total << std::endl;
+    
 }
 
-void map_test(const std::vector<std::string>& strings)
+void orderedmap_test(const std::vector<std::string>& strings)
 {
     std::map<std::string, int> strMap;
     for(const auto& str : strings)
