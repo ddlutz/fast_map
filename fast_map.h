@@ -35,16 +35,21 @@ public:
     m_loadFactor(c_loadFactor),
     m_count(0)
     {
-        reserve(m_primes[0]);
+        reserve(128);
     }
 
     void reserve(size_t size)
     {
         // Todo: make newSize the next biggest prime?
-        size_t newSize = (size_t(size / m_loadFactor));
-        newSize = find_next_prime(newSize);
-        m_map.resize(newSize);
-        m_free.resize(newSize, true);
+        size_t neededSize = (size_t(size / m_loadFactor));
+        size_t nextSize = 2;
+
+        while (nextSize < neededSize)
+        {
+            nextSize *= 2;
+        }
+        m_map.resize(nextSize);
+        m_free.resize(nextSize, true);
     }
 
     T& operator[] (const Key& k)
@@ -59,7 +64,7 @@ public:
 
         size_t hashValue = hasher(k);
 
-        size_t idx = hashValue % m_map.size();
+        size_t idx = hashValue & (m_map.size() - 1); //% m_map.size();
 
         while ( (!m_free[idx]))
         {
@@ -90,24 +95,11 @@ public:
     }
 
 private:
-    size_t find_next_prime(size_t num)
-    {
-        //std::cout << "previus num: " << num << std::endl;
-        for(const auto& prime : m_primes)
-        {
-            if (prime >= num)
-            {
-                return prime;
-            }
-        }
-
-        return 2 * num;
-    }
 
     void resize()
     {
         //std::cout << "resize called" << std::endl;
-        size_t nextSize = find_next_prime(m_map.size() + 1);
+        size_t nextSize = m_map.size() * 2;
         //std:: cout << "next size: " << nextSize << std::endl;;
         std::vector<fast_map_node<Key, T>> newMap;
         std::vector<bool> newFrees;
