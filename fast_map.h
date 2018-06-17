@@ -7,16 +7,7 @@
 
 namespace
 {
-    const double c_loadFactor{ 0.89 };
-
-    bool isPrime(size_t n)
-    {
-        for(int i = 0; i < n / 2; i++)
-        {
-            return false;
-        }
-        return true;
-    }
+    const double c_loadFactor{ 0.5 };
 }
 template <typename Key, typename T>
 class fast_map_node
